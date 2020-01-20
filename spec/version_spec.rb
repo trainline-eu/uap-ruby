@@ -76,6 +76,91 @@ describe UserAgentParser::Version do
       version = UserAgentParser::Version.new('1.2.3')
       _(version).wont_equal UserAgentParser::Version.new('1.2.2')
     end
+
+    it 'returns true for versions with different precision' do
+      version = UserAgentParser::Version.new('1.2.3')
+      _(version).must_equal UserAgentParser::Version.new('1')
+    end
+  end
+
+  describe '#<=>' do
+    it 'accepts string for comparison' do
+      version = UserAgentParser::Version.new('1.2.3')
+
+      assert_operator version, :<, '1.2.4'
+      assert_operator version, :==, '1.2.3'
+      assert_operator version, :>, '1.2.2'
+    end
+
+    it 'accepts another instance of Version for comparison' do
+      version = UserAgentParser::Version.new('1.2.3')
+
+      assert_operator version, :>, UserAgentParser::Version.new('1.2.2')
+      assert_operator version, :==, UserAgentParser::Version.new('1.2.3')
+      assert_operator version, :<, UserAgentParser::Version.new('1.2.4')
+    end
+
+    it 'is comparing major version' do
+      version = UserAgentParser::Version.new('1.2.3')
+
+      assert_operator version, :<, '2'
+      assert_operator version, :<=, '1'
+      assert_operator version, :>=, '1'
+      assert_operator version, :>, '0'
+    end
+
+    it 'is comparing minor version' do
+      version = UserAgentParser::Version.new('1.2.3')
+
+      assert_operator version, :<, '2.0'
+      assert_operator version, :<, '1.3'
+      assert_operator version, :<=, '1.2'
+      assert_operator version, :>=, '1.2'
+      assert_operator version, :>, '1.1'
+      assert_operator version, :>, '0.1'
+    end
+
+    it 'is comparing patch level' do
+      version = UserAgentParser::Version.new('1.2.3')
+
+      assert_operator version, :<, '1.2.4'
+      assert_operator version, :>=, '1.2.3'
+      assert_operator version, :<=, '1.2.3'
+      assert_operator version, :>, '1.2.2'
+    end
+
+    it 'is comparing patch_minor level correctly' do
+      version = UserAgentParser::Version.new('1.2.3.p1')
+
+      assert_operator version, :<, '1.2.4'
+      assert_operator version, :<, '1.2.3.p2'
+      assert_operator version, :>=, '1.2.3.p1'
+      assert_operator version, :<=, '1.2.3.p1'
+      assert_operator version, :>, '1.2.3.p0'
+      assert_operator version, :>, '1.2.2'
+      assert_operator version, :>, '1.1'
+    end
+
+    it 'is correctly comparing versions with different lengths' do
+      version = UserAgentParser::Version.new('1.42.3')
+
+      assert_operator version, :<, '1.142'
+      assert_operator version, :<, '1.42.4'
+      assert_operator version, :>=, '1.42'
+      assert_operator version, :>, '1.14'
+      assert_operator version, :>, '1.7'
+      assert_operator version, :>, '1.3'
+    end
+
+    it 'does its best to compare string versions' do
+      version = UserAgentParser::Version.new('1.2.3.a')
+
+      assert_operator version, :<, '1.2.4'
+      assert_operator version, :<, '1.2.3.b'
+      assert_operator version, :<, '1.2.3.p1'
+      assert_operator version, :<, '1.2.3.p0'
+      assert_operator version, :>, '1.2.2'
+    end
   end
 
   describe '#inspect' do

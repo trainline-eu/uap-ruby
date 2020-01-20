@@ -2,9 +2,11 @@
 
 module UserAgentParser
   class Version
+    include Comparable
+
     # Private: Regex used to split string version string into major, minor,
     # patch, and patch_minor.
-    SEGMENTS_REGEX = /\d+\-\d+|\d+[a-zA-Z]+$|\d+|[A-Za-z][0-9A-Za-z-]*$/
+    SEGMENTS_REGEX = /\d+\-\d+|\d+[a-zA-Z]+$|\d+|[A-Za-z][0-9A-Za-z-]*$/.freeze
 
     attr_reader :version
     alias to_s version
@@ -45,9 +47,24 @@ module UserAgentParser
         version == other.version
     end
 
-    alias == eql?
+    def ==(other)
+      other = normalize_version(other)
 
-    # Private
+      self.<=>(other).zero?
+    end
+
+    def <=>(other)
+      other = normalize_version(other)
+
+      range = [segments.size, other.segments.size].min - 1
+
+      (0..range).each do |i|
+        return int_compare(segments[i], other.segments[i]) if segments[i] != other.segments[i]
+      end
+
+      0
+    end
+
     def segments
       @segments ||= version.scan(SEGMENTS_REGEX)
     end
@@ -60,6 +77,19 @@ module UserAgentParser
         patch: patch,
         patch_minor: patch_minor
       }
+    end
+
+    private
+
+    def normalize_version(version)
+      version if version.is_a?(Version)
+      Version.new(version.to_s)
+    end
+
+    def int_compare(s_segment, o_segment)
+      Integer(s_segment).<=>Integer(o_segment)
+    rescue ArgumentError, TypeError
+      s_segment.<=>(o_segment)
     end
   end
 end
