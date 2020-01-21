@@ -80,24 +80,13 @@ module UserAgentParser
       end
     end
 
-    if Gem::Version.new(RUBY_VERSION) >= Gem::Version.new('2.4.0')
-      def first_pattern_match(patterns, value)
-        patterns.each do |pattern|
-          if pattern[:regex].match?(value)
-            return [pattern, pattern[:regex].match(value)]
-          end
+    def first_pattern_match(patterns, value)
+      patterns.each do |pattern|
+        if pattern[:regex].match?(value)
+          return [pattern, pattern[:regex].match(value)]
         end
-        nil
       end
-    else
-      def first_pattern_match(patterns, value)
-        patterns.each do |pattern|
-          if (match = pattern[:regex].match(value))
-            return [pattern, match]
-          end
-        end
-        nil
-      end
+      nil
     end
 
     def user_agent_from_pattern_match(pattern, match, os = nil, device = nil)
